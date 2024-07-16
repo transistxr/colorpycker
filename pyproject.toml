@@ -9,11 +9,14 @@ readme = "README.md"
 version = "0.0.1"
 dependencies = [
     "PySide6",
-    "yaml",
-    "os",
-    "random",
-    "sys"
+    "PyYAML"
 ]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [project.urls]
 Homepage = "https://github.com/transistxr/colorpycker"
