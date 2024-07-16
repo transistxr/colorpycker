@@ -18,6 +18,9 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[project.scripts]
+colorpycker = "colorpycker:main"
+
 [project.urls]
 Homepage = "https://github.com/transistxr/colorpycker"
 Issues = "https://github.com/transistxr/colorpycker/issues"
