@@ -2,14 +2,14 @@
 
 import sys, random
 from PySide6 import QtWidgets, QtCore, QtGui
-from historywindow import HistoryWindow
+from colorpycker import historywindow
 
 
 class MainWidget(QtWidgets.QMainWindow):
 
     def openHistoryWindow(self):
         self.window = QtWidgets.QMainWindow()
-        self.ui = HistoryWindow()
+        self.ui = historywindow.HistoryWindow()
         self.ui.show()
 
     def __init__(self):
