@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "colorpycker"
+description = "A simple color picker written in Qt"
+readme = "README.md"
+version = "0.0.1"
+dependencies = [
+    "PySide6",
+    "yaml",
+    "os",
+    "random",
+    "sys"
+]
+
+[project.urls]
+Homepage = "https://github.com/transistxr/colorpycker"
+Issues = "https://github.com/transistxr/colorpycker/issues"
