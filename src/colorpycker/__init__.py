@@ -2,5 +2,6 @@
 import sys
 from colorpycker import floatingwidget
 
+
 def main():
     sys.exit(floatingwidget.run())
