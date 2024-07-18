@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "colorpycker"
 description = "A simple color picker written in Qt"
 readme = "README.md"
-version = "0.0.1"
+version = "1.0.0"
 dependencies = [
     "PySide6",
     "PyYAML"
