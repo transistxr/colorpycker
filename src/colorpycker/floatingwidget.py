@@ -3,6 +3,7 @@
 import sys, random, os
 from PySide6 import QtWidgets, QtCore, QtGui, QtSvg
 from colorpycker import historywindow
+import screenshot
 
 
 class MainWidget(QtWidgets.QMainWindow):
@@ -63,7 +64,9 @@ class MainWidget(QtWidgets.QMainWindow):
 
         screen = QtWidgets.QApplication.primaryScreen()
         pixMapp = screen.grabWindow(0)
-        self.color = pixMapp.toImage().pixelColor(self.point)
+        self.color = screenshot.capture().pixelColor(
+            self.point if self.point is not None else QtCore.QPoint(0, 0)
+        )
         self.colorCode = self.color.name()
         print(f"rgb({self.color.red()}, {self.color.green()}, {self.color.blue()})")
         print(self.color.name())
@@ -149,3 +152,7 @@ def run():
     appwindow.showFullScreen()
     appwindow.show()
     sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    run()
