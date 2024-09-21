@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-import sys, random, os
-from PySide6 import QtWidgets, QtCore, QtGui, QtSvg
+import sys, random, os, re
+from PySide6 import QtWidgets, QtCore, QtGui, QtDBus
 from colorpycker import historywindow
-import screenshot
+from typing import Optional
 
 
 class MainWidget(QtWidgets.QMainWindow):
@@ -28,7 +28,7 @@ class MainWidget(QtWidgets.QMainWindow):
         self.setAttribute(QtCore.Qt.WA_NoSystemBackground)
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
         self.setMouseTracking(True)
-
+        self.stopChild = False
         self.point = None
         self.colorCode = "#abcdef"
         # self.colorCode = "rgb(255, 255, 255)"
@@ -62,11 +62,21 @@ class MainWidget(QtWidgets.QMainWindow):
 
     def paintEvent(self, event):
 
-        screen = QtWidgets.QApplication.primaryScreen()
-        pixMapp = screen.grabWindow(0)
-        self.color = screenshot.capture().pixelColor(
-            self.point if self.point is not None else QtCore.QPoint(0, 0)
-        )
+        # screen = QtWidgets.QApplication.primaryScreen()
+        # pixMapp = screen.grabWindow(0)
+        # self.color = pixMapp.toImage().pixelColor(self.point)
+        result = []
+
+        def _signal_triggered(color0: int, color1: int, color2: int) -> None:
+            print("Signal Triggered")
+            result.append(color0)
+            result.append(color1)
+            result.append(color2)
+
+        portal = PortalPickColorInterface()
+        portal.on_result.connect(_signal_triggered)
+        QtCore.QTimer.singleShot(0, portal.getColor)
+        self.color = QtGui.QColor(result[0], result[1], result[2])
         self.colorCode = self.color.name()
         print(f"rgb({self.color.red()}, {self.color.green()}, {self.color.blue()})")
         print(self.color.name())
@@ -152,6 +162,69 @@ def run():
     appwindow.showFullScreen()
     appwindow.show()
     sys.exit(app.exec())
+
+
+class PortalRequestInterface(QtDBus.QDBusAbstractInterface):
+    Response = QtCore.Signal(QtDBus.QDBusMessage)
+
+    def __init__(
+        self, path: str, connection: QtDBus.QDBusConnection, parent: QtCore.QObject
+    ) -> None:
+        super().__init__(
+            "org.freedesktop.portal.Desktop",
+            path,
+            "org.freedesktop.portal.Request",  # type: ignore
+            connection,
+            parent,
+        )
+
+
+class PortalPickColorInterface(QtCore.QObject):
+    on_response = QtCore.Signal(QtDBus.QDBusMessage)
+    on_result = QtCore.Signal(int, int, int)
+
+    def __init__(
+        self,
+        parent: Optional[QtCore.QObject] = None,
+    ) -> None:
+        super().__init__(parent)
+        self.on_response.connect(self.got_signal)
+
+    def getColor(self) -> None:
+        bus = QtDBus.QDBusConnection.sessionBus()
+
+        base = bus.baseService()[1:].replace(".", "_")
+
+        object_path = f"/org/freedesktop/portal/desktop/request/{base}/my_token"
+
+        request = PortalRequestInterface(object_path, bus, self)
+        request.Response.connect(self.on_response)
+
+        interface = QtDBus.QDBusInterface(
+            "org.freedesktop.portal.Desktop",
+            "/org/freedesktop/portal/desktop",
+            "org.freedesktop.portal.Screenshot",
+            bus,
+            self,
+        )
+
+        message = interface.call("PickColor", "", {"handle_token": "my_token"})
+
+    def got_signal(self, message: QtDBus.QDBusMessage) -> None:
+        print("DBus signal message: %s", str(message))
+
+        pattern = r"\(ddd\)\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)"
+
+        match = re.search(pattern, str(message))
+        print(match.group(1))
+        print(match.group(2))
+        print(match.group(3))
+
+        self.on_result.emit(
+            int(float(match.group(1)) * 255),
+            int(float(match.group(2)) * 255),
+            int(float(match.group(3)) * 255),
+        )
 
 
 if __name__ == "__main__":
